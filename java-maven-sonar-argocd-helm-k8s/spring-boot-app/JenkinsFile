@@ -6,12 +6,6 @@ pipeline {
     }
   }
   stages {
-    /* stage('Checkout') {
-      steps {
-        sh 'echo passed'
-        //git branch: 'main', url: 'https://github.com/AnshumanS7/Jenkins-Zero-To-Hero.git'
-      }
-    }*/
     stage('Build and Test') {
       steps {
         sh 'ls -ltr'
@@ -32,7 +26,6 @@ pipeline {
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "anshumans7/ultimate-cicd:${BUILD_NUMBER}"
-        // DOCKERFILE_LOCATION = "java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
       steps {
@@ -42,6 +35,13 @@ pipeline {
             docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
                 dockerImage.push()
             }
+        }
+      }
+    }
+    stage('Check Untracked Files') {
+      steps {
+        script {
+          sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && git status'
         }
       }
     }
@@ -56,7 +56,6 @@ pipeline {
                     git config user.email "e21cseu0743@bennett.edu.in"
                     git config user.name "AnshumanS7"
                     git checkout main
-                    BUILD_NUMBER=${BUILD_NUMBER}
                     sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
                     git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
                     git commit -m "Update deployment image to version ${BUILD_NUMBER}"
